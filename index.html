@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verkleinwoorden: werkbladgenerator</title>
+    <style>
+        body { font-family: Verdana, Arial, sans-serif; margin: 0; padding: 0; background: #f5f7fa; color: #2c3e50; }
+        .container { max-width: 900px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { background: #34495e; color: white; padding: 25px; text-align: center; border-bottom: 3px solid #2c3e50; }
+        .content { padding: 40px; }
+        .settings-panel { background: #ffffff; padding: 30px; border: 1px solid #bdc3c7; margin-bottom: 30px; }
+        .section-title { font-weight: bold; border-bottom: 2px solid #34495e; margin-bottom: 15px; padding-bottom: 8px; }
+        
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .checkbox-item { display: flex; align-items: center; background: #f8f9fa; padding: 12px; border: 1px solid #e9ecef; cursor: pointer; text-transform: lowercase; }
+        .checkbox-item input { margin-right: 12px; transform: scale(1.2); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9em; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #bdc3c7; box-sizing: border-box; font-family: Verdana; }
+        
+        .button-group { display: flex; gap: 15px; margin-top: 25px; }
+        .btn { flex: 1; padding: 15px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 14px; border-radius: 4px; transition: 0.2s; }
+        .btn-gen { background: #34495e; }
+        .btn-print { background: #27ae60; }
+        .btn:hover { opacity: 0.9; }
+
+        .worksheet-preview { border: 1px solid #bdc3c7; padding: 40px; background: white; min-height: 300px; }
+        .ws-header-meta { display: flex; gap: 40px; margin-bottom: 10px; font-weight: normal; justify-content: flex-start; }
+        .ws-title { text-align: center; margin-bottom: 30px; font-size: 1.8em; }
+        .ws-row { display: flex; align-items: center; }
+        .ws-num { min-width: 55px; font-weight: bold; } 
+        .ws-word { min-width: 160px; } 
+        .ws-arrow { width: 50px; color: #7f8c8d; text-align: center; }
+        .ws-line { flex-grow: 1; border-bottom: 1px solid #000; height: 22px; }
+        .ws-footer { margin-top: 40px; text-align: center; font-size: 10px; color: #95a5a6; }
+
+        @media print {
+            .settings-panel, .header { display: none !important; }
+            .container { box-shadow: none; width: 100%; max-width: none; }
+            .worksheet-preview { border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header"><h1>📝 Verkleinwoorden: werkbladgenerator</h1></div>
+    <div class="content">
+        <div class="settings-panel">
+            <div class="section-title">1. Categorieën</div>
+            <div class="checkbox-grid">
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="je" checked> -je</label>
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="pje"> -pje</label>
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="tje"> -tje</label>
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="etje"> -etje</label>
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="klinker"> klinkerverdubbeling</label>
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="medeklinker"> medeklinkerverdubbeling</label>
+                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="uitzondering"> uitzonderingen</label>
+            </div>
+
+            <div class="section-title">2. Instellingen</div>
+            <div class="form-group">
+                <label>Aantal oefeningen:</label>
+                <input type="number" id="num-ex" value="15" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>Lettergrootte:</label>
+                <select id="f-size">
+                    <option value="12">12pt</option>
+                    <option value="14" selected>14pt</option>
+                    <option value="16">16pt</option>
+                    <option value="18">18pt</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Regelafstand:</label>
+                <select id="line-space">
+                    <option value="10">compact</option>
+                    <option value="20" selected>normaal</option>
+                    <option value="30">ruim</option>
+                    <option value="40">extra ruim</option>
+                </select>
+            </div>
+            <label style="cursor:pointer; display: block; margin-bottom: 10px;">
+                <input type="checkbox" id="show-ans"> verbeterblad genereren
+            </label>
+
+            <div class="button-group">
+                <button class="btn btn-gen" onclick="buildWorksheet()">Genereer werkblad</button>
+                <button class="btn btn-print" onclick="printWorksheet()">Afdrukken</button>
+            </div>
+        </div>
+
+        <div id="ws-display" class="worksheet-preview">
+            <p style="text-align:center; color:#95a5a6;">Het voorbeeld verschijnt hier na het genereren.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const database = {
+        je: ['roos', 'bed', 'licht', 'fles', 'drank', 'plant', 'balk', 'huis', 'bord', 'kaars', 'kast', 'buis', 'laars', 'gerecht', 'scherf', 'vlieg', 'schelp', 'baas', 'haas', 'bos', 'hond', 'kat', 'brief', 'brood', 'beest', 'aap', 'tas', 'zak', 'broek', 'fiets', 'zus', 'bank', 'boekentas', 'schrift', 'vork', 'schep', 'wolk', 'markt', 'feest', 'worst', 'schat', 'muts'],
+        pje: ['raam', 'helm', 'boom', 'lichaam', 'naam', 'scherm', 'duim', 'arm', 'film', 'darm', 'geheim', 'worm', 'vorm', 'riem', 'probleem', 'bezem', 'bodem', 'bloem', 'kraam', 'pluim', 'stroom'],
+        tje: ['tuin', 'tafel', 'stoel', 'trui', 'zaal', 'eekhoorn', 'ijsbeer', 'veulen', 'vuur', 'kikker', 'schaar', 'vlinder', 'banaan', 'bijl', 'kooi', 'vijver', 'zetel', 'haai', 'keel', 'vrouw', 'ei', 'monster', 'toren', 'vinger', 'rij', 'lijn', 'schaal', 'kussen', 'laken', 'zee', 'vogel', 'lepel', 'appel', 'sleutel', 'deur', 'muur', 'schuur', 'knie', 'vloer', 'broer'],
+        etje: ['slang', 'tekening', 'wandeling', 'gang', 'ding', 'ring', 'tong'],
+        klinker: ['foto', 'piano', 'mango', 'panda', 'pyjama', 'paraplu', 'radio', 'euro', 'oma', 'opa', 'gorilla', 'chocola', 'papa', 'mama', 'café', 'sla', 'taxi', 'auto'],
+        medeklinker: ['stal', 'kom', 'spin', 'spel', 'man', 'pil', 'ster', 'bel', 'krul', 'kar', 'bom', 'bal', 'kam', 'vlag', 'big', 'snor', 'pop'],
+        uitzondering: ['jongen', 'baby', 'machine', 'blad', 'glas', 'schip', 'gat', 'koning', 'pudding', 'ketting']
+    };
+
+    const solve = {
+        je: w => w + 'je', 
+        pje: w => w + 'pje', 
+        tje: w => w + 'tje', 
+        etje: w => w + 'etje',
+        klinker: w => {
+            const low = w.toLowerCase();
+            if (low === 'taxi') return "taxietje";
+            if (low === 'auto') return "autootje";
+            if (['a','o','u'].some(l => low.endsWith(l))) return w + w.slice(-1) + 'tje';
+            if (low.endsWith('e') || low.endsWith('é')) return w + 'etje';
+            return w + 'tje';
+        },
+        medeklinker: w => w + w.slice(-1) + 'etje',
+        uitzondering: w => {
+            const d = {'jongen':'jongetje','baby':"baby'tje",'machine':'machientje','blad':'blaadje','glas':'glaasje','schip':'scheepje','gat':'gaatje','koning':'koninkje','pudding':'puddinkje','ketting':'kettinkje'};
+            return d[w.toLowerCase()] || w + 'je';
+        }
+    };
+
+    function buildWorksheet() {
+        const selectedCats = Array.from(document.querySelectorAll('.cat-check:checked')).map(c => c.value);
+        if (selectedCats.length === 0) return alert("Selecteer a.u.b. minstens één categorie.");
+
+        const num = parseInt(document.getElementById('num-ex').value);
+        const fontSize = document.getElementById('f-size').value;
+        const spacing = document.getElementById('line-space').value;
+        
+        let pool = [];
+        selectedCats.forEach(cat => {
+            database[cat].forEach(word => pool.push({word, cat}));
+        });
+
+        pool.sort(() => Math.random() - 0.5);
+        const selection = pool.slice(0, num);
+
+        let html = `<div id="printable-area" style="font-size:${fontSize}px">`;
+        html += `<div class="ws-header-meta"><span>Naam: _________________________</span><span>Datum: _____________</span></div>`;
+        html += `<h2 class="ws-title">Verkleinwoorden</h2>`;
+
+        selection.forEach((item, index) => {
+            html += `
+                <div class="ws-row" style="margin-bottom:${spacing}px">
+                    <span class="ws-num">${index + 1}.</span>
+                    <span class="ws-word">${item.word}</span>
+                    <span class="ws-arrow">→</span>
+                    <div class="ws-line"></div>
+                </div>`;
+        });
+
+        if (document.getElementById('show-ans').checked) {
+            html += `<div style="page-break-before:always; margin-top:50px; border-top: 2px dashed #34495e; padding-top:20px;">`;
+            html += `<h3>Verbeterblad</h3><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">`;
+            selection.forEach((item, index) => {
+                html += `<div>${index + 1}. ${item.word} &rarr; <b>${solve[item.cat](item.word)}</b></div>`;
+            });
+            html += `</div></div>`;
+        }
+
+        html += `<div class="ws-footer">CC BY-NC-SA 4.0 NicoKlas</div></div>`;
+        document.getElementById('ws-display').innerHTML = html;
+    }
+
+    function printWorksheet() {
+        const content = document.getElementById('ws-display').innerHTML;
+        if (content.includes("na het genereren")) return alert("Genereer eerst een werkblad.");
+
+        const printWin = window.open('', '', 'width=900,height=800');
+        const originalStyles = document.querySelector('style').innerHTML;
+
+        printWin.document.write(`
+            <html>
+                <head>
+                    <title>Afdrukken: Verkleinwoorden</title>
+                    <style>
+                        ${originalStyles}
+                        body { background: white; padding: 40px; }
+                        .worksheet-preview { border: none; }
+                    </style>
+                </head>
+                <body>${content}</body>
+            </html>
+        `);
+        printWin.document.close();
+        
+        setTimeout(() => {
+            printWin.focus();
+            printWin.print();
+            printWin.close();
+        }, 500);
+    }
+</script>
+</body>
+</html>
