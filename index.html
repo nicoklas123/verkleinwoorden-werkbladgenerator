@@ -3,107 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verkleinwoorden: werkbladgenerator</title>
+    <title>NicoKlas | Verkleinwoorden Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Verdana, Arial, sans-serif; margin: 0; padding: 0; background: #f5f7fa; color: #2c3e50; }
-        .container { max-width: 900px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .header { background: #34495e; color: white; padding: 25px; text-align: center; border-bottom: 3px solid #2c3e50; }
-        .content { padding: 40px; }
-        .settings-panel { background: #ffffff; padding: 30px; border: 1px solid #bdc3c7; margin-bottom: 30px; }
-        .section-title { font-weight: bold; border-bottom: 2px solid #34495e; margin-bottom: 15px; padding-bottom: 8px; }
+        @import url('https://fonts.cdnfonts.com/css/verdana');
         
-        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .checkbox-item { display: flex; align-items: center; background: #f8f9fa; padding: 12px; border: 1px solid #e9ecef; cursor: pointer; text-transform: lowercase; }
-        .checkbox-item input { margin-right: 12px; transform: scale(1.2); }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.9em; }
-        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #bdc3c7; box-sizing: border-box; font-family: Verdana; }
-        
-        .button-group { display: flex; gap: 15px; margin-top: 25px; }
-        .btn { flex: 1; padding: 15px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 14px; border-radius: 4px; transition: 0.2s; }
-        .btn-gen { background: #34495e; }
-        .btn-print { background: #27ae60; }
-        .btn:hover { opacity: 0.9; }
+        :root {
+            --dynamic-spacing: 32px;
+            --dynamic-font-size: 16px;
+        }
 
-        .worksheet-preview { border: 1px solid #bdc3c7; padding: 40px; background: white; min-height: 300px; }
-        .ws-header-meta { display: flex; gap: 40px; margin-bottom: 10px; font-weight: normal; justify-content: flex-start; }
-        .ws-title { text-align: center; margin-bottom: 30px; font-size: 1.8em; }
-        .ws-row { display: flex; align-items: center; }
-        .ws-num { min-width: 55px; font-weight: bold; } 
-        .ws-word { min-width: 160px; } 
-        .ws-arrow { width: 50px; color: #7f8c8d; text-align: center; }
-        .ws-line { flex-grow: 1; border-bottom: 1px solid #000; height: 22px; }
-        .ws-footer { margin-top: 40px; text-align: center; font-size: 10px; color: #95a5a6; }
+        body { font-family: 'Verdana', sans-serif; background-color: #f3f4f6; }
+        
+        .strak-input {
+            border: 1px solid #000;
+            border-radius: 0;
+            padding: 0.5rem;
+            font-family: 'Verdana', sans-serif;
+            width: 100%;
+        }
+
+        .cat-checkbox { display: none; }
+
+        .cat-label {
+            display: block;
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            text-transform: lowercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cat-checkbox:checked + .cat-label {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+        }
+
+        .woord-blok {
+            break-inside: avoid;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: var(--dynamic-spacing) !important;
+        }
+
+        .ws-word-container {
+            width: 40%;
+            flex-shrink: 0;
+        }
+
+        .ws-line {
+            width: 60%;
+            border-bottom: 1px solid #000;
+            height: 1.2em;
+        }
+
+        #preview-list {
+            font-size: var(--dynamic-font-size);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            column-gap: 3rem;
+            align-content: start; /* Zorgt dat woorden niet verticaal uitrekken */
+        }
+
+        .page-footer {
+            text-align: right;
+            padding-top: 2rem;
+            font-size: 9px;
+            color: #d1d5db;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            width: 100%;
+            margin-top: 2rem; /* Altijd een beetje afstand van de laatste oefening */
+        }
 
         @media print {
-            .settings-panel, .header { display: none !important; }
-            .container { box-shadow: none; width: 100%; max-width: none; }
-            .worksheet-preview { border: none; padding: 0; }
+            .no-print { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
+            #werkblad-container { box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+            .paper { border: none !important; box-shadow: none !important; width: 100% !important; padding: 0 !important; }
+            .page-container { 
+                padding: 10mm; 
+                display: block;
+                min-height: auto !important; /* Voorkomt trekken aan de content */
+            }
+            .page-break { page-break-before: always; }
+            #preview-list { 
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                align-content: start !important;
+            }
         }
     </style>
 </head>
-<body>
+<body class="p-0 md:p-8">
 
-<div class="container">
-    <div class="header"><h1>📝 Verkleinwoorden: werkbladgenerator</h1></div>
-    <div class="content">
-        <div class="settings-panel">
-            <div class="section-title">1. Categorieën</div>
-            <div class="checkbox-grid">
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="je" checked> -je</label>
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="pje"> -pje</label>
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="tje"> -tje</label>
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="etje"> -etje</label>
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="klinker"> klinkerverdubbeling</label>
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="medeklinker"> medeklinkerverdubbeling</label>
-                <label class="checkbox-item"><input type="checkbox" class="cat-check" value="uitzondering"> uitzonderingen</label>
-            </div>
+<div class="max-w-7xl mx-auto container">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        <aside class="no-print space-y-8 order-2 md:order-1">
+            <div class="bg-white p-6 border border-gray-200 shadow-sm">
+                <h2 class="text-xs font-bold uppercase mb-4 text-black tracking-widest border-b border-black pb-2">1. Categorieën</h2>
+                <div class="grid grid-cols-2 gap-2 mb-6">
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="je" checked><span class="cat-label">-je</span></label>
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="pje"><span class="cat-label">-pje</span></label>
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="tje"><span class="cat-label">-tje</span></label>
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="etje"><span class="cat-label">-etje</span></label>
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="klinker"><span class="cat-label">klinker</span></label>
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="medeklinker"><span class="cat-label">medekl.</span></label>
+                    <label><input type="checkbox" class="cat-check cat-checkbox" value="uitzondering" class="col-span-2"><span class="cat-label">speciaal</span></label>
+                </div>
 
-            <div class="section-title">2. Instellingen</div>
-            <div class="form-group">
-                <label>Aantal oefeningen:</label>
-                <input type="number" id="num-ex" value="15" min="1" max="100">
-            </div>
-            <div class="form-group">
-                <label>Lettergrootte:</label>
-                <select id="f-size">
-                    <option value="12">12pt</option>
-                    <option value="14" selected>14pt</option>
-                    <option value="16">16pt</option>
-                    <option value="18">18pt</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Regelafstand:</label>
-                <select id="line-space">
-                    <option value="10">compact</option>
-                    <option value="20" selected>normaal</option>
-                    <option value="30">ruim</option>
-                    <option value="40">extra ruim</option>
-                </select>
-            </div>
-            <label style="cursor:pointer; display: block; margin-bottom: 10px;">
-                <input type="checkbox" id="show-ans"> verbeterblad genereren
-            </label>
+                <h2 class="text-xs font-bold uppercase mb-4 text-black tracking-widest border-b border-black pb-2">2. Instellingen</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold uppercase mb-2 block text-black">Aantal oefeningen</label>
+                        <input type="number" id="num-ex" value="20" min="1" max="100" class="strak-input">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase mb-2 block text-black flex justify-between">
+                            Lettergrootte <span id="val-f-size">16px</span>
+                        </label>
+                        <input type="range" id="f-size" min="12" max="24" value="16" class="w-full accent-black">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase mb-2 block text-black flex justify-between">
+                            Regelafstand <span id="val-spacing">32px</span>
+                        </label>
+                        <input type="range" id="line-space" min="20" max="60" value="32" class="w-full accent-black">
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer pt-2">
+                        <input type="checkbox" id="show-ans" class="accent-black">
+                        <span class="text-[10px] font-bold uppercase">Verbeterblad</span>
+                    </label>
+                </div>
 
-            <div class="button-group">
-                <button class="btn btn-gen" onclick="buildWorksheet()">Genereer werkblad</button>
-                <button class="btn btn-print" onclick="printWorksheet()">Afdrukken</button>
-            </div>
-        </div>
+                <div class="flex flex-col gap-3 mt-8">
+                    <button onclick="buildWorksheet()" class="bg-black text-white text-xs font-bold uppercase tracking-widest py-4 hover:bg-gray-800 transition">Genereer</button>
+                    <button onclick="window.print()" class="border border-black text-black text-xs font-bold uppercase tracking-widest py-4 hover:bg-gray-50 transition">Print</button>
+                </div>
 
-        <div id="ws-display" class="worksheet-preview">
-            <p style="text-align:center; color:#95a5a6;">Het voorbeeld verschijnt hier na het genereren.</p>
-        </div>
+                <div class="mt-12 text-[10px] text-gray-400 uppercase tracking-widest text-center">CC BY-NC-SA 4.0 NicoKlas</div>
+            </div>
+        </aside>
+
+        <main id="werkblad-container" class="md:col-span-3 order-1 md:order-2">
+            <div id="paper" class="bg-white shadow-2xl min-h-[29.7cm] p-4 md:p-12 paper">
+                <div id="ws-content">
+                    </div>
+            </div>
+        </main>
     </div>
 </div>
 
 <script>
     const database = {
-        je: ['roos', 'bed', 'licht', 'fles', 'drank', 'plant', 'balk', 'huis', 'bord', 'kaars', 'kast', 'buis', 'laars', 'gerecht', 'scherf', 'vlieg', 'schelp', 'baas', 'haas', 'bos', 'hond', 'kat', 'brief', 'brood', 'beest', 'aap', 'tas', 'zak', 'broek', 'fiets', 'zus', 'bank', 'boekentas', 'schrift', 'vork', 'schep', 'wolk', 'markt', 'feest', 'worst', 'schat', 'muts'],
-        pje: ['raam', 'helm', 'boom', 'lichaam', 'naam', 'scherm', 'duim', 'arm', 'film', 'darm', 'geheim', 'worm', 'vorm', 'riem', 'probleem', 'bezem', 'bodem', 'bloem', 'kraam', 'pluim', 'stroom'],
-        tje: ['tuin', 'tafel', 'stoel', 'trui', 'zaal', 'eekhoorn', 'ijsbeer', 'veulen', 'vuur', 'kikker', 'schaar', 'vlinder', 'banaan', 'bijl', 'kooi', 'vijver', 'zetel', 'haai', 'keel', 'vrouw', 'ei', 'monster', 'toren', 'vinger', 'rij', 'lijn', 'schaal', 'kussen', 'laken', 'zee', 'vogel', 'lepel', 'appel', 'sleutel', 'deur', 'muur', 'schuur', 'knie', 'vloer', 'broer'],
+        je: ['roos', 'bed', 'licht', 'fles', 'drank', 'plant', 'balk', 'huis', 'bord', 'kaars', 'kast', 'buis', 'laars', 'gerecht', 'scherf', 'vlieg', 'schelp', 'baas', 'haas', 'bos', 'hond', 'kat', 'brief', 'brood', 'beest', 'aap', 'tas', 'zak', 'broek', 'fiets', 'zus', 'bank', 'vork', 'schep', 'wolk', 'markt', 'feest', 'worst', 'schat', 'muts'],
+        pje: ['raam', 'helm', 'boom', 'lichaam', 'naam', 'scherm', 'duim', 'arm', 'film', 'darm', 'geheim', 'worm', 'vorm', 'riem', 'bezem', 'bodem', 'bloem', 'kraam', 'pluim', 'stroom'],
+        tje: ['tuin', 'tafel', 'stoel', 'trui', 'zaal', 'eekhoorn', 'ijsbeer', 'veulen', 'vuur', 'kikker', 'schaar', 'vlinder', 'banaan', 'bijl', 'kooi', 'vijver', 'zetel', 'haai', 'keel', 'vrouw', 'ei', 'toren', 'vinger', 'rij', 'lijn', 'schaal', 'kussen', 'laken', 'zee', 'vogel', 'lepel', 'appel', 'sleutel', 'deur', 'muur', 'schuur', 'knie', 'vloer', 'broer'],
         etje: ['slang', 'tekening', 'wandeling', 'gang', 'ding', 'ring', 'tong'],
         klinker: ['foto', 'piano', 'mango', 'panda', 'pyjama', 'paraplu', 'radio', 'euro', 'oma', 'opa', 'gorilla', 'chocola', 'papa', 'mama', 'café', 'sla', 'taxi', 'auto'],
         medeklinker: ['stal', 'kom', 'spin', 'spel', 'man', 'pil', 'ster', 'bel', 'krul', 'kar', 'bom', 'bal', 'kam', 'vlag', 'big', 'snor', 'pop'],
@@ -111,10 +173,7 @@
     };
 
     const solve = {
-        je: w => w + 'je', 
-        pje: w => w + 'pje', 
-        tje: w => w + 'tje', 
-        etje: w => w + 'etje',
+        je: w => w + 'je', pje: w => w + 'pje', tje: w => w + 'tje', etje: w => w + 'etje',
         klinker: w => {
             const low = w.toLowerCase();
             if (low === 'taxi') return "taxietje";
@@ -130,77 +189,84 @@
         }
     };
 
+    let currentSelection = [];
+
+    window.onload = buildWorksheet;
+
     function buildWorksheet() {
-        const selectedCats = Array.from(document.querySelectorAll('.cat-check:checked')).map(c => c.value);
-        if (selectedCats.length === 0) return alert("Selecteer a.u.b. minstens één categorie.");
+        const rawCats = Array.from(document.querySelectorAll('.cat-check:checked')).map(c => c.value);
+        if (rawCats.length === 0) return;
+
+        const catNames = { 'je': '-je', 'pje': '-pje', 'tje': '-tje', 'etje': '-etje', 'klinker': 'klinkers', 'medeklinker': 'medeklinkers', 'uitzondering': 'speciaal' };
+        const label = rawCats.map(c => catNames[c]).join(' • ');
 
         const num = parseInt(document.getElementById('num-ex').value);
-        const fontSize = document.getElementById('f-size').value;
-        const spacing = document.getElementById('line-space').value;
-        
         let pool = [];
-        selectedCats.forEach(cat => {
-            database[cat].forEach(word => pool.push({word, cat}));
-        });
-
+        rawCats.forEach(cat => database[cat].forEach(word => pool.push({word, cat})));
         pool.sort(() => Math.random() - 0.5);
-        const selection = pool.slice(0, num);
+        currentSelection = pool.slice(0, num);
+        
+        renderHTML(label);
+    }
 
-        let html = `<div id="printable-area" style="font-size:${fontSize}px">`;
-        html += `<div class="ws-header-meta"><span>Naam: _________________________</span><span>Datum: _____________</span></div>`;
-        html += `<h2 class="ws-title">Verkleinwoorden</h2>`;
+    function renderHTML(catLabel) {
+        const showAns = document.getElementById('show-ans').checked;
+        const footer = `<footer class="page-footer">CC BY-NC-SA 4.0 NicoKlas</footer>`;
+        
+        let html = `
+            <div class="page-container">
+                <header class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
+                    <div>
+                        <h1 class="text-3xl font-black uppercase tracking-normal">Verkleinwoorden</h1>
+                        <span class="bg-black text-white px-2 py-0.5 text-[10px] uppercase font-bold tracking-widest">${catLabel}</span>
+                    </div>
+                    <div class="text-[10px] font-bold uppercase text-gray-400 text-right">Naam: .........................</div>
+                </header>
+                <div id="preview-list">
+                    ${currentSelection.map(item => `
+                        <div class="woord-blok">
+                            <div class="ws-word-container">${item.word}</div>
+                            <div class="ws-line"></div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${footer}
+            </div>
+        `;
 
-        selection.forEach((item, index) => {
+        if (showAns) {
             html += `
-                <div class="ws-row" style="margin-bottom:${spacing}px">
-                    <span class="ws-num">${index + 1}.</span>
-                    <span class="ws-word">${item.word}</span>
-                    <span class="ws-arrow">→</span>
-                    <div class="ws-line"></div>
-                </div>`;
-        });
-
-        if (document.getElementById('show-ans').checked) {
-            html += `<div style="page-break-before:always; margin-top:50px; border-top: 2px dashed #34495e; padding-top:20px;">`;
-            html += `<h3>Verbeterblad</h3><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">`;
-            selection.forEach((item, index) => {
-                html += `<div>${index + 1}. ${item.word} &rarr; <b>${solve[item.cat](item.word)}</b></div>`;
-            });
-            html += `</div></div>`;
+                <div class="page-container page-break">
+                    <header class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
+                        <div>
+                            <h1 class="text-3xl font-black uppercase tracking-normal">Verbeterblad</h1>
+                            <span class="bg-black text-white px-2 py-0.5 text-[10px] uppercase font-bold tracking-widest">${catLabel}</span>
+                        </div>
+                    </header>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm italic">
+                        ${currentSelection.map(item => `<div>${item.word} &rarr; <b>${solve[item.cat](item.word)}</b></div>`).join('')}
+                    </div>
+                    ${footer}
+                </div>
+            `;
         }
 
-        html += `<div class="ws-footer">CC BY-NC-SA 4.0 NicoKlas</div></div>`;
-        document.getElementById('ws-display').innerHTML = html;
+        document.getElementById('ws-content').innerHTML = html;
     }
 
-    function printWorksheet() {
-        const content = document.getElementById('ws-display').innerHTML;
-        if (content.includes("na het genereren")) return alert("Genereer eerst een werkblad.");
+    document.getElementById('f-size').addEventListener('input', (e) => {
+        const val = e.target.value + 'px';
+        document.getElementById('val-f-size').innerText = val;
+        document.documentElement.style.setProperty('--dynamic-font-size', val);
+    });
 
-        const printWin = window.open('', '', 'width=900,height=800');
-        const originalStyles = document.querySelector('style').innerHTML;
+    document.getElementById('line-space').addEventListener('input', (e) => {
+        const val = e.target.value + 'px';
+        document.getElementById('val-spacing').innerText = val;
+        document.documentElement.style.setProperty('--dynamic-spacing', val);
+    });
 
-        printWin.document.write(`
-            <html>
-                <head>
-                    <title>Afdrukken: Verkleinwoorden</title>
-                    <style>
-                        ${originalStyles}
-                        body { background: white; padding: 40px; }
-                        .worksheet-preview { border: none; }
-                    </style>
-                </head>
-                <body>${content}</body>
-            </html>
-        `);
-        printWin.document.close();
-        
-        setTimeout(() => {
-            printWin.focus();
-            printWin.print();
-            printWin.close();
-        }, 500);
-    }
+    document.getElementById('show-ans').addEventListener('change', buildWorksheet);
 </script>
 </body>
 </html>
