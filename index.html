@@ -65,7 +65,7 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             column-gap: 3rem;
-            align-content: start; /* Zorgt dat woorden niet verticaal uitrekken */
+            align-content: start;
         }
 
         .page-footer {
@@ -77,7 +77,7 @@
             text-transform: uppercase;
             letter-spacing: 0.1em;
             width: 100%;
-            margin-top: 2rem; /* Altijd een beetje afstand van de laatste oefening */
+            margin-top: 2rem;
         }
 
         @media print {
@@ -89,7 +89,7 @@
             .page-container { 
                 padding: 10mm; 
                 display: block;
-                min-height: auto !important; /* Voorkomt trekken aan de content */
+                min-height: auto !important;
             }
             .page-break { page-break-before: always; }
             #preview-list { 
@@ -104,6 +104,13 @@
 
 <div class="max-w-7xl mx-auto container">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        <main id="werkblad-container" class="md:col-span-3 order-1 md:order-2">
+            <div id="paper" class="bg-white shadow-2xl min-h-[29.7cm] p-4 md:p-12 paper">
+                <div id="ws-content">
+                    </div>
+            </div>
+        </main>
         
         <aside class="no-print space-y-8 order-2 md:order-1">
             <div class="bg-white p-6 border border-gray-200 shadow-sm">
@@ -152,12 +159,6 @@
             </div>
         </aside>
 
-        <main id="werkblad-container" class="md:col-span-3 order-1 md:order-2">
-            <div id="paper" class="bg-white shadow-2xl min-h-[29.7cm] p-4 md:p-12 paper">
-                <div id="ws-content">
-                    </div>
-            </div>
-        </main>
     </div>
 </div>
 
